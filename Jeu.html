@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu ehpad</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .target {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .target.circle {
+            border-radius: 50%;
+        }
+
+        .target.square {
+            border-radius: 0;
+        }
+
+        #timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 46px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .game-interface {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="timer">10</div>
+    <div class="game-interface">
+        <h2 id="score">Score: <span id="count">0</span></h2>
+        <label for="duration">Durée de la partie (en secondes): </label>
+        <select id="duration">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+            <option value="60">60</option>
+        </select>
+        <label for="difficulty">Difficulté: </label>
+        <select id="difficulty">
+            <option value="easy">Facile</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Difficile</option>
+        </select>
+        <button onclick="startGame()">Commencer la partie</button>
+    </div>
+
+    <script>
+        let gameDuration = 10; // Durée du jeu en secondes par défaut
+        const maxTargets = Infinity; // Pas de limite de cibles
+
+        let countdown;
+        let score = 0;
+        let gameActive = false;
+
+        function startGame() {
+            if (!gameActive) {
+                gameActive = true;
+                gameDuration = parseInt(document.getElementById("duration").value, 10);
+                countdown = gameDuration;
+                score = 0;
+                updateScore();
+                updateTimer();
+                removeTargets();
+                startTimer();
+                spawnTarget();
+                hideInterface();
+            }
+        }
+
+        function updateScore() {
+            document.getElementById("count").innerText = score;
+        }
+
+        function updateTimer() {
+            document.getElementById("timer").style.display = 'block';
+            document.getElementById("timer").innerText = countdown;
+        }
+
+        function startTimer() {
+            const timerInterval = setInterval(function() {
+                countdown--;
+                updateTimer();
+
+                if (countdown <= 0) {
+                    clearInterval(timerInterval);
+                    gameActive = false;
+                    alert("Fin du jeu !\nVotre score est de " + score + " en " + gameDuration + " secondes.");
+                    removeTargets();
+                    showInterface();
+                    document.getElementById("timer").style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function spawnTarget() {
+            const target = document.createElement("div");
+            target.classList.add("target");
+
+            const shapes = ["circle", "square"];
+            const colors = ["red", "blue", "green"];
+
+            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            target.classList.add(randomShape);
+            target.style.backgroundColor = randomColor;
+
+            const difficulty = document.getElementById("difficulty").value;
+
+            let maxX, maxY;
+
+            switch (difficulty) {
+                case "easy":
+                    maxX = Math.min(window.innerWidth / 3, window.innerWidth - 50);
+                    maxY = Math.min(window.innerHeight / 3, window.innerHeight - 50);
+                    break;
+                case "normal":
+                    maxX = Math.min(window.innerWidth / 1.5, window.innerWidth - 50);
+                    maxY = Math.min(window.innerHeight / 2, window.innerHeight - 50);
+                    break;
+                case "hard":
+                    maxX = Math.min(window.innerWidth / 1, window.innerWidth - 50);
+                    maxY = Math.min(window.innerHeight / 1, window.innerHeight - 50);
+                    break;
+                default:
+                    maxX = Math.min(window.innerWidth / 2, window.innerWidth - 50);
+                    maxY = Math.min(window.innerHeight / 2, window.innerHeight - 50);
+                    break;
+            }
+
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            target.style.left = randomX + "px";
+            target.style.top = randomY + "px";
+
+            target.addEventListener("click", function() {
+                score++;
+                updateScore();
+                target.remove();
+                if (gameActive) {
+                    spawnTarget();
+                }
+            });
+
+            document.body.appendChild(target);
+        }
+
+        function removeTargets() {
+            const targets = document.querySelectorAll(".target");
+            targets.forEach(target => target.remove());
+        }
+
+        function hideInterface() {
+            document.querySelector('.game-interface').style.display = 'none';
+        }
+
+        function showInterface() {
+            document.querySelector('.game-interface').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
